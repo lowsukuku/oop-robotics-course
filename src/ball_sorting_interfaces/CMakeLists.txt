@@ -9,6 +9,8 @@ find_package(std_msgs REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/DetectedTarget.msg"
   "msg/DetectedTargets.msg"
+  "msg/GripperState.msg"
+  "action/MoveToPose.action"
   DEPENDENCIES geometry_msgs std_msgs
 )
 

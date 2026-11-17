@@ -3,7 +3,7 @@
 <package format="3">
   <name>ball_sorting_interfaces</name>
   <version>0.1.0</version>
-  <description>Messages of the ball-sorting demo: detected targets.</description>
+  <description>Messages and actions of the ball-sorting demo: detected targets, gripper state and the MoveToPose action.</description>
   <maintainer email="instructor@example.com">Robotics Course Instructor</maintainer>
   <license>Apache-2.0</license>
 

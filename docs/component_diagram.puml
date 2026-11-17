@@ -1,0 +1,140 @@
+@startuml component_diagram
+' Эталонная UML-диаграмма компонентов: сортировка шаров манипулятором UR5e
+' Рендер: java -jar plantuml.jar -tsvg component_diagram.puml
+' Полные имена и типы интерфейсов — в architecture.md
+
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam componentStyle uml2
+skinparam linetype polyline
+skinparam nodesep 80
+skinparam ranksep 55
+skinparam ArrowColor #334155
+skinparam InterfaceBorderColor #334155
+
+skinparam package {
+  BorderColor #64748b
+  FontStyle bold
+}
+skinparam component {
+  BackgroundColor<<dev>> #dbeafe
+  BorderColor<<dev>> #1d4ed8
+  BackgroundColor<<sim>> #f1f5f9
+  BorderColor<<sim>> #64748b
+  BackgroundColor<<infra>> #fef3c7
+  BorderColor<<infra>> #b45309
+}
+skinparam interface {
+  BackgroundColor<<topic>> #a7f3d0
+  BackgroundColor<<service>> #f5d0fe
+  BackgroundColor<<action>> #fed7aa
+}
+skinparam note {
+  BackgroundColor #fffbea
+  BorderColor #a8a29e
+  FontSize 11
+}
+hide <<dev>> stereotype
+hide <<sim>> stereotype
+hide <<infra>> stereotype
+
+title Сортировка шаров UR5e + Robotiq 2F-85 — компоненты ROS 2
+
+actor "Пользователь\n(ros2 CLI)" as user
+
+' ───────── Разрабатываемая система управления ─────────
+package "Система управления манипулятором (разрабатывается в курсе)" as CTRL {
+  interface "change_state" as srv_activate <<service>>
+  component "<<ROS 2 lifecycle node>>\n**/ball_sorter**\nPython" as sorter <<dev>>
+  interface "move_to_pose" as act_pose <<action>>
+  interface "grip" as srv_grip <<service>>
+  interface "gripper_state" as tp_gstate <<topic>>
+  component "<<ROS 2 node>>\n**/manipulator_driver**\nC++" as driver <<dev>>
+}
+
+' ───────── Техническое зрение ─────────
+component "<<ROS 2 node>>\n**/targets_detector**\n10 Гц" as detector <<sim>>
+interface "detected_targets" as tp_targets <<topic>>
+
+' ───────── Подача шаров ─────────
+interface "launch" as srv_launch <<service>>
+component "<<ROS 2 node>>\n**/targets_launcher**" as launcher <<sim>>
+note right of launcher
+  Вспомогательный узел: имитирует
+  поступление шаров, не входит в ПО робота.
+end note
+
+' ───────── Готовая инфраструктура ─────────
+package "Симуляция и ros2_control (готовая инфраструктура)" as INFRA {
+  interface "follow_joint_trajectory" as act_fjt <<action>>
+  interface "joint_states" as tp_js <<topic>>
+  interface "gripper_cmd" as act_grip <<action>>
+  interface "set_free_joint_state" as srv_free <<service>>
+  interface "free_joint_states" as tp_fjs <<topic>>
+
+  component "<<process>>\n**ros2_control_node**" as r2c <<infra>> {
+    component "<<controller>>\n**/arm_controller**\n//joint_trajectory_controller//\n6 суставов" as jtc <<infra>>
+    component "<<controller>>\n**/joint_state_broadcaster**" as jsb <<infra>>
+    component "<<controller>>\n**/gripper_controller**\n//parallel_gripper_action_controller//" as grip <<infra>>
+    component "<<ROS 2 node>>\n**/mujoco_ros2_control_node**" as mjnode <<infra>> {
+      component "<<mujoco plugin>>\n**free_joint_state_publisher**\nsub-node · ball_0…ball_19 · 10 Гц" as fjsp <<infra>>
+    }
+    component "<<ROS 2 node>>\n**/controller_manager**\n100 Гц: read → update → write" as cm <<infra>>
+  }
+}
+note bottom of r2c
+  Один процесс ОС. Контроллеры — узлы, загружаемые controller_manager как плагины;
+  их update() вызывается по очереди в потоке управления controller_manager.
+end note
+
+' ───────── Предоставляемые интерфейсы (интерфейс над своим компонентом) ─────────
+srv_activate -- sorter
+act_pose -- driver
+srv_grip -- driver
+tp_gstate -- driver
+tp_targets -- detector
+srv_launch -- launcher
+act_fjt -- jtc
+tp_js -- jsb
+act_grip -- grip
+srv_free -- mjnode
+tp_fjs -- fjsp
+
+' Подсказка раскладки: сервис launch на одном уровне с detected_targets, прямо над узлом
+tp_targets -[hidden]right- srv_launch
+' Порядок слева направо (подсказки для Graphviz, уменьшают пересечения связей)
+driver -[hidden]right- detector
+detector -[hidden]right- launcher
+act_fjt -[hidden]right- tp_js
+tp_js -[hidden]right- act_grip
+act_grip -[hidden]right- tp_fjs
+tp_fjs -[hidden]right- srv_free
+
+' ───────── Используемые интерфейсы (зависимость «use») ─────────
+user ..> srv_activate : lifecycle: configure, activate\n(перевод в рабочее состояние)
+user ..> srv_launch : включить/выключить\nподачу шаров
+sorter ..> act_pose : над шаром, спуск,\nнад контейнерами
+sorter ..> tp_targets : покоящиеся\nна столе шары
+sorter ..> srv_grip : сжать /\nразжать
+sorter ..> tp_gstate : держит шар /\nпусто
+driver ..> act_fjt : траектория
+driver ..> act_grip : положение,\nусилие 25–40 Н
+driver ..> tp_js : суставы руки\nи захвата
+launcher ..> tp_fjs : шары\nв контейнерах
+detector ..> tp_fjs : позы и\nскорости шаров
+launcher ..> srv_free : запуск шара
+
+legend bottom
+  |= Обозначение |= Смысл |
+  | <#dbeafe> | разрабатываемый ROS 2-узел |
+  | <#f1f5f9> | имитационный узел (предоставляется готовым) |
+  | <#fef3c7> | готовая инфраструктура |
+  | <#a7f3d0> ○ | topic |
+  | <#f5d0fe> ○ | service |
+  | <#fed7aa> ○ | action |
+  | ——○ | узел предоставляет интерфейс |
+  | - - -> | узел использует интерфейс |
+endlegend
+
+@enduml

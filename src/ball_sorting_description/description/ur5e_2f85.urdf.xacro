@@ -103,7 +103,7 @@
   <!--
     tcp — точка между подушечками пальцев на оси захвата, на высоте центров подушечек
     при раскрытии 68 мм (диаметр шара). Ось z направлена от захвата, пальцы сжимаются вдоль оси y.
-    Позы захвата задаются для этой точки.
+    В эту точку /manipulator_driver ставит позу из goal move_to_pose.
   -->
   <link name="tcp"/>
   <joint name="gripper_base-tcp" type="fixed">
@@ -147,7 +147,7 @@
     <xacro:position_joint name="wrist_1_joint"/>
     <xacro:position_joint name="wrist_2_joint"/>
     <xacro:position_joint name="wrist_3_joint"/>
-    <!-- Для привода захвата публикуется и усилие (effort). -->
+    <!-- Усилие (effort) привода захвата нужно /manipulator_driver, чтобы заметить потерю объекта. -->
     <xacro:position_joint name="gripper_right_driver_joint"/>
   </ros2_control>
 </robot>
