@@ -1,0 +1,273 @@
+<!--
+  Сцена задачи сортировки шаров: UR5e + Robotiq 2F-85, рабочая зона, контейнеры, 20 шаров.
+  Описание — simulation/README.md. Мировая система координат совпадает с системой основания
+  манипулятора: начало — центр нижней поверхности основания, +x — вправо (к контейнерам), +y — вперёд.
+
+  Файл сгенерирован скриптом generate_scene.py. Размеры сцены меняйте в нём, а не здесь.
+-->
+<mujoco model="ball_sorting">
+  <compiler angle="radian" meshdir="../models/mujoco_menagerie/universal_robots_ur5e/assets" autolimits="true"/>
+
+  <option integrator="implicitfast" cone="elliptic" impratio="10"/>
+
+  <statistic center="0.08 0 0.25" extent="0.9"/>
+
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0.1 0.1 0.1"/>
+    <global azimuth="120" elevation="-35" offwidth="1280" offheight="960"/>
+  </visual>
+
+  <default>
+    <default class="ur5e">
+      <material specular="0.5" shininess="0.25"/>
+      <joint axis="0 1 0" range="-6.28319 6.28319" armature="0.1"/>
+      <position ctrlrange="-6.2831 6.2831" kp="4000" dampratio="1" forcerange="-150 150"/>
+      <default class="size3">
+        <default class="size3_limited">
+          <joint range="-3.1415 3.1415"/>
+          <position ctrlrange="-3.1415 3.1415"/>
+        </default>
+      </default>
+      <default class="size1">
+        <position kp="1000" forcerange="-60 60"/>
+      </default>
+      <default class="visual">
+        <geom type="mesh" contype="0" conaffinity="0" group="2"/>
+      </default>
+      <default class="collision">
+        <geom type="capsule" group="3"/>
+        <default class="eef_collision">
+          <geom type="cylinder"/>
+        </default>
+      </default>
+      <site size="0.001" rgba="0.5 0.5 0.5 0.3" group="4"/>
+    </default>
+
+    <!-- Элементы сцены -->
+    <default class="bevel">
+      <geom type="box" rgba="0.62 0.66 0.72 1"/>
+    </default>
+    <default class="fence">
+      <geom type="box" rgba="0.75 0.85 0.95 0.12"/>
+    </default>
+    <default class="bin_blue">
+      <geom type="box" rgba="0.15 0.35 0.9 0.35"/>
+    </default>
+    <default class="bin_red">
+      <geom type="box" rgba="0.9 0.2 0.15 0.35"/>
+    </default>
+    <default class="marking">
+      <geom type="box" contype="0" conaffinity="0"/>
+    </default>
+    <!-- Шар: condim=6 включает трение качения, без него шар на ровном столе не останавливается -->
+    <default class="ball">
+      <geom type="sphere" size="0.034" mass="0.28" condim="6"
+            friction="0.6 0.002 0.0006" solref="0.004 1"/>
+    </default>
+  </default>
+
+  <asset>
+    <model name="robotiq_2f85" file="../models/mujoco_menagerie/robotiq_2f85/2f85.xml"/>
+    <material class="ur5e" name="black" rgba="0.033 0.033 0.033 1"/>
+    <material class="ur5e" name="jointgray" rgba="0.278 0.278 0.278 1"/>
+    <material class="ur5e" name="linkgray" rgba="0.82 0.82 0.82 1"/>
+    <material class="ur5e" name="urblue" rgba="0.49 0.678 0.8 1"/>
+    <material name="table" rgba="0.86 0.87 0.88 1"/>
+    <material name="collar" rgba="0.62 0.66 0.72 1"/>
+    <material name="ball_blue" rgba="0.1 0.3 0.95 1"/>
+    <material name="ball_red" rgba="0.95 0.15 0.1 1"/>
+    <material name="bin_blue_floor" rgba="0.15 0.35 0.9 0.25"/>
+    <material name="bin_red_floor" rgba="0.9 0.2 0.15 0.25"/>
+
+    <mesh file="base_0.obj"/>
+    <mesh file="base_1.obj"/>
+    <mesh file="shoulder_0.obj"/>
+    <mesh file="shoulder_1.obj"/>
+    <mesh file="shoulder_2.obj"/>
+    <mesh file="upperarm_0.obj"/>
+    <mesh file="upperarm_1.obj"/>
+    <mesh file="upperarm_2.obj"/>
+    <mesh file="upperarm_3.obj"/>
+    <mesh file="forearm_0.obj"/>
+    <mesh file="forearm_1.obj"/>
+    <mesh file="forearm_2.obj"/>
+    <mesh file="forearm_3.obj"/>
+    <mesh file="wrist1_0.obj"/>
+    <mesh file="wrist1_1.obj"/>
+    <mesh file="wrist1_2.obj"/>
+    <mesh file="wrist2_0.obj"/>
+    <mesh file="wrist2_1.obj"/>
+    <mesh file="wrist2_2.obj"/>
+    <mesh file="wrist3.obj"/>
+
+    <!-- Воротник вокруг основания: усечённый конус, заданный вершинами (выпуклая оболочка) -->
+    <mesh name="collar" vertex="0.2925 0 -0.01  0.289998 0.038179 -0.01  0.282533 0.075705 -0.01  0.270235 0.111935 -0.01  0.253312 0.14625 -0.01  0.232056 0.178063 -0.01  0.206829 0.206829 -0.01  0.178063 0.232056 -0.01  0.14625 0.253312 -0.01  0.111935 0.270235 -0.01  0.075705 0.282533 -0.01  0.038179 0.289998 -0.01  0 0.2925 -0.01  -0.038179 0.289998 -0.01  -0.075705 0.282533 -0.01  -0.111935 0.270235 -0.01  -0.14625 0.253312 -0.01  -0.178063 0.232056 -0.01  -0.206829 0.206829 -0.01  -0.232056 0.178063 -0.01  -0.253312 0.14625 -0.01  -0.270235 0.111935 -0.01  -0.282533 0.075705 -0.01  -0.289998 0.038179 -0.01  -0.2925 0 -0.01  -0.289998 -0.038179 -0.01  -0.282533 -0.075705 -0.01  -0.270235 -0.111935 -0.01  -0.253312 -0.14625 -0.01  -0.232056 -0.178063 -0.01  -0.206829 -0.206829 -0.01  -0.178063 -0.232056 -0.01  -0.14625 -0.253312 -0.01  -0.111935 -0.270235 -0.01  -0.075705 -0.282533 -0.01  -0.038179 -0.289998 -0.01  0 -0.2925 -0.01  0.038179 -0.289998 -0.01  0.075705 -0.282533 -0.01  0.111935 -0.270235 -0.01  0.14625 -0.253312 -0.01  0.178063 -0.232056 -0.01  0.206829 -0.206829 -0.01  0.232056 -0.178063 -0.01  0.253312 -0.14625 -0.01  0.270235 -0.111935 -0.01  0.282533 -0.075705 -0.01  0.289998 -0.038179 -0.01  0.075 0 0.02  0.074358 0.009789 0.02  0.072444 0.019411 0.02  0.069291 0.028701 0.02  0.064952 0.0375 0.02  0.059502 0.045657 0.02  0.053033 0.053033 0.02  0.045657 0.059502 0.02  0.0375 0.064952 0.02  0.028701 0.069291 0.02  0.019411 0.072444 0.02  0.009789 0.074358 0.02  0 0.075 0.02  -0.009789 0.074358 0.02  -0.019411 0.072444 0.02  -0.028701 0.069291 0.02  -0.0375 0.064952 0.02  -0.045657 0.059502 0.02  -0.053033 0.053033 0.02  -0.059502 0.045657 0.02  -0.064952 0.0375 0.02  -0.069291 0.028701 0.02  -0.072444 0.019411 0.02  -0.074358 0.009789 0.02  -0.075 0 0.02  -0.074358 -0.009789 0.02  -0.072444 -0.019411 0.02  -0.069291 -0.028701 0.02  -0.064952 -0.0375 0.02  -0.059502 -0.045657 0.02  -0.053033 -0.053033 0.02  -0.045657 -0.059502 0.02  -0.0375 -0.064952 0.02  -0.028701 -0.069291 0.02  -0.019411 -0.072444 0.02  -0.009789 -0.074358 0.02  0 -0.075 0.02  0.009789 -0.074358 0.02  0.019411 -0.072444 0.02  0.028701 -0.069291 0.02  0.0375 -0.064952 0.02  0.045657 -0.059502 0.02  0.053033 -0.053033 0.02  0.059502 -0.045657 0.02  0.064952 -0.0375 0.02  0.069291 -0.028701 0.02  0.072444 -0.019411 0.02  0.074358 -0.009789 0.02"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 -1 2" dir="0 0.5 -1" directional="true"/>
+
+    <!-- Стол: поверхность z = 0 -->
+    <geom name="table" type="plane" size="2 2 0.05" material="table"/>
+
+    <!-- Воротник вокруг основания манипулятора -->
+    <geom name="collar" type="mesh" mesh="collar" material="collar"/>
+
+    <!-- Скосы по периметру рабочей зоны -->
+    <geom name="bevel_left" class="bevel" pos="-0.451126 0 0.007064" size="0.15096 0.6 0.01" quat="0.998408 0 0.056396 0"/>
+    <geom name="bevel_right" class="bevel" pos="0.342425 0 0.000299" size="0.041231 0.6 0.01" quat="0.992508 0 -0.122183 0"/>
+    <geom name="bevel_front" class="bevel" pos="-0.11 0.451126 0.007064" size="0.49 0.15096 0.01" quat="0.998408 0.056396 0 0"/>
+    <geom name="bevel_back" class="bevel" pos="-0.11 -0.451126 0.007064" size="0.49 0.15096 0.01" quat="0.998408 -0.056396 0 0"/>
+
+    <!-- Контейнеры: синий (y > 0) и красный (y < 0) -->
+    <geom name="bin_blue_front" class="bin_blue" pos="0.3805 0.3 0.15" size="0.0005 0.3 0.15"/>
+    <geom name="bin_blue_back" class="bin_blue" pos="0.5315 0.3 0.15" size="0.0005 0.3 0.15"/>
+    <geom name="bin_blue_inner" class="bin_blue" pos="0.456 0.0005 0.15" size="0.076 0.0005 0.15"/>
+    <geom name="bin_blue_outer" class="bin_blue" pos="0.456 0.5995 0.15" size="0.076 0.0005 0.15"/>
+    <geom name="bin_blue_floor" class="marking" material="bin_blue_floor" pos="0.456 0.3 0.0005" size="0.076 0.3 0.0005"/>
+    <geom name="bin_red_front" class="bin_red" pos="0.3805 -0.3 0.15" size="0.0005 0.3 0.15"/>
+    <geom name="bin_red_back" class="bin_red" pos="0.5315 -0.3 0.15" size="0.0005 0.3 0.15"/>
+    <geom name="bin_red_inner" class="bin_red" pos="0.456 -0.0005 0.15" size="0.076 0.0005 0.15"/>
+    <geom name="bin_red_outer" class="bin_red" pos="0.456 -0.5995 0.15" size="0.076 0.0005 0.15"/>
+    <geom name="bin_red_floor" class="marking" material="bin_red_floor" pos="0.456 -0.3 0.0005" size="0.076 0.3 0.0005"/>
+
+    <!-- Ограждение -->
+    <geom name="fence_left" class="fence" pos="-0.605 0 0.45" size="0.005 0.61 0.45"/>
+    <geom name="fence_right" class="fence" pos="0.537 0 0.45" size="0.005 0.61 0.45"/>
+    <geom name="fence_front" class="fence" pos="-0.034 0.605 0.45" size="0.576 0.005 0.45"/>
+    <geom name="fence_back" class="fence" pos="-0.034 -0.605 0.45" size="0.576 0.005 0.45"/>
+
+    <!-- Манипулятор UR5e (MuJoCo Menagerie); система base повёрнута на 180° вокруг z, как в исходной модели -->
+    <body name="base" quat="0 0 0 -1" childclass="ur5e">
+      <inertial mass="4.0" pos="0 0 0" diaginertia="0.00443333156 0.00443333156 0.0072"/>
+      <geom mesh="base_0" material="black" class="visual"/>
+      <geom mesh="base_1" material="jointgray" class="visual"/>
+      <geom name="base_collision" class="eef_collision" size="0.075 0.045" pos="0 0 0.045"/>
+      <body name="shoulder_link" pos="0 0 0.163" gravcomp="1">
+        <inertial mass="3.7" pos="0 0 0" diaginertia="0.0102675 0.0102675 0.00666"/>
+        <joint name="shoulder_pan_joint" class="size3" axis="0 0 1"/>
+        <geom mesh="shoulder_0" material="urblue" class="visual"/>
+        <geom mesh="shoulder_1" material="black" class="visual"/>
+        <geom mesh="shoulder_2" material="jointgray" class="visual"/>
+        <geom class="collision" size="0.06 0.06" pos="0 0 -0.04"/>
+        <body name="upper_arm_link" pos="0 0.138 0" quat="1 0 1 0" gravcomp="1">
+          <inertial mass="8.393" pos="0 0 0.2125" diaginertia="0.133886 0.133886 0.0151074"/>
+          <joint name="shoulder_lift_joint" class="size3"/>
+          <geom mesh="upperarm_0" material="linkgray" class="visual"/>
+          <geom mesh="upperarm_1" material="black" class="visual"/>
+          <geom mesh="upperarm_2" material="jointgray" class="visual"/>
+          <geom mesh="upperarm_3" material="urblue" class="visual"/>
+          <geom class="collision" pos="0 -0.04 0" quat="1 1 0 0" size="0.06 0.06"/>
+          <geom class="collision" size="0.05 0.2" pos="0 0 0.2"/>
+          <body name="forearm_link" pos="0 -0.131 0.425" gravcomp="1">
+            <inertial mass="2.275" pos="0 0 0.196" diaginertia="0.0311796 0.0311796 0.004095"/>
+            <joint name="elbow_joint" class="size3_limited"/>
+            <geom mesh="forearm_0" material="urblue" class="visual"/>
+            <geom mesh="forearm_1" material="linkgray" class="visual"/>
+            <geom mesh="forearm_2" material="black" class="visual"/>
+            <geom mesh="forearm_3" material="jointgray" class="visual"/>
+            <geom class="collision" pos="0 0.08 0" quat="1 1 0 0" size="0.055 0.06"/>
+            <geom class="collision" size="0.038 0.19" pos="0 0 0.2"/>
+            <body name="wrist_1_link" pos="0 0 0.392" quat="1 0 1 0" gravcomp="1">
+              <inertial mass="1.219" pos="0 0.127 0" diaginertia="0.0025599 0.0025599 0.0021942"/>
+              <joint name="wrist_1_joint" class="size1"/>
+              <geom mesh="wrist1_0" material="black" class="visual"/>
+              <geom mesh="wrist1_1" material="urblue" class="visual"/>
+              <geom mesh="wrist1_2" material="jointgray" class="visual"/>
+              <geom class="collision" pos="0 0.05 0" quat="1 1 0 0" size="0.04 0.07"/>
+              <body name="wrist_2_link" pos="0 0.127 0" gravcomp="1">
+                <inertial mass="1.219" pos="0 0 0.1" diaginertia="0.0025599 0.0025599 0.0021942"/>
+                <joint name="wrist_2_joint" axis="0 0 1" class="size1"/>
+                <geom mesh="wrist2_0" material="black" class="visual"/>
+                <geom mesh="wrist2_1" material="urblue" class="visual"/>
+                <geom mesh="wrist2_2" material="jointgray" class="visual"/>
+                <geom class="collision" size="0.04 0.06" pos="0 0 0.04"/>
+                <geom class="collision" pos="0 0.02 0.1" quat="1 1 0 0" size="0.04 0.04"/>
+                <body name="wrist_3_link" pos="0 0 0.1" gravcomp="1">
+                  <inertial mass="0.1889" pos="0 0.0771683 0" quat="1 0 0 1"
+                    diaginertia="0.000132134 9.90863e-05 9.90863e-05"/>
+                  <joint name="wrist_3_joint" class="size1"/>
+                  <geom material="linkgray" mesh="wrist3" class="visual"/>
+                  <geom class="eef_collision" pos="0 0.08 0" quat="1 1 0 0" size="0.04 0.02"/>
+                  <site name="attachment_site" pos="0 0.1 0" quat="-1 1 0 0"/>
+                  <!-- Захват Robotiq 2F-85; точка tcp задана в его модели (gripper_tcp) -->
+                  <frame pos="0 0.1 0" quat="-0.7071068 0.7071068 0 0">
+                    <attach model="robotiq_2f85" body="base_mount" prefix="gripper_"/>
+                  </frame>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+
+    <!-- Шары: ball_0…ball_9 синие, ball_10…ball_19 красные; имя тела — идентификатор шара -->
+    <body name="ball_0" pos="0.4185 0.0608 0.045"><freejoint name="ball_0_joint"/><geom name="ball_0_geom" class="ball" material="ball_blue"/></body>
+    <body name="ball_1" pos="0.4935 0.0608 0.045"><freejoint name="ball_1_joint"/><geom name="ball_1_geom" class="ball" material="ball_blue"/></body>
+    <body name="ball_2" pos="0.4185 0.1804 0.045"><freejoint name="ball_2_joint"/><geom name="ball_2_geom" class="ball" material="ball_blue"/></body>
+    <body name="ball_3" pos="0.4935 0.1804 0.045"><freejoint name="ball_3_joint"/><geom name="ball_3_geom" class="ball" material="ball_blue"/></body>
+    <body name="ball_4" pos="0.4185 0.3 0.045"><freejoint name="ball_4_joint"/><geom name="ball_4_geom" class="ball" material="ball_blue"/></body>
+    <body name="ball_5" pos="0.4935 0.3 0.045"><freejoint name="ball_5_joint"/><geom name="ball_5_geom" class="ball" material="ball_blue"/></body>
+    <body name="ball_6" pos="0.4185 0.4196 0.045"><freejoint name="ball_6_joint"/><geom name="ball_6_geom" class="ball" material="ball_blue"/></body>
+    <body name="ball_7" pos="0.4935 0.4196 0.045"><freejoint name="ball_7_joint"/><geom name="ball_7_geom" class="ball" material="ball_blue"/></body>
+    <body name="ball_8" pos="0.4185 0.5392 0.045"><freejoint name="ball_8_joint"/><geom name="ball_8_geom" class="ball" material="ball_blue"/></body>
+    <body name="ball_9" pos="0.4935 0.5392 0.045"><freejoint name="ball_9_joint"/><geom name="ball_9_geom" class="ball" material="ball_blue"/></body>
+    <body name="ball_10" pos="0.4185 -0.0608 0.045"><freejoint name="ball_10_joint"/><geom name="ball_10_geom" class="ball" material="ball_red"/></body>
+    <body name="ball_11" pos="0.4935 -0.0608 0.045"><freejoint name="ball_11_joint"/><geom name="ball_11_geom" class="ball" material="ball_red"/></body>
+    <body name="ball_12" pos="0.4185 -0.1804 0.045"><freejoint name="ball_12_joint"/><geom name="ball_12_geom" class="ball" material="ball_red"/></body>
+    <body name="ball_13" pos="0.4935 -0.1804 0.045"><freejoint name="ball_13_joint"/><geom name="ball_13_geom" class="ball" material="ball_red"/></body>
+    <body name="ball_14" pos="0.4185 -0.3 0.045"><freejoint name="ball_14_joint"/><geom name="ball_14_geom" class="ball" material="ball_red"/></body>
+    <body name="ball_15" pos="0.4935 -0.3 0.045"><freejoint name="ball_15_joint"/><geom name="ball_15_geom" class="ball" material="ball_red"/></body>
+    <body name="ball_16" pos="0.4185 -0.4196 0.045"><freejoint name="ball_16_joint"/><geom name="ball_16_geom" class="ball" material="ball_red"/></body>
+    <body name="ball_17" pos="0.4935 -0.4196 0.045"><freejoint name="ball_17_joint"/><geom name="ball_17_geom" class="ball" material="ball_red"/></body>
+    <body name="ball_18" pos="0.4185 -0.5392 0.045"><freejoint name="ball_18_joint"/><geom name="ball_18_geom" class="ball" material="ball_red"/></body>
+    <body name="ball_19" pos="0.4935 -0.5392 0.045"><freejoint name="ball_19_joint"/><geom name="ball_19_geom" class="ball" material="ball_red"/></body>
+  </worldbody>
+
+  <contact>
+    <!-- Основание и плечо соприкасаются конструктивно -->
+    <exclude body1="base" body2="shoulder_link"/>
+    <exclude body1="world" body2="shoulder_link"/>
+  </contact>
+
+  <actuator>
+    <position class="size3" name="shoulder_pan_joint" joint="shoulder_pan_joint"/>
+    <position class="size3" name="shoulder_lift_joint" joint="shoulder_lift_joint"/>
+    <position class="size3_limited" name="elbow_joint" joint="elbow_joint"/>
+    <position class="size1" name="wrist_1_joint" joint="wrist_1_joint"/>
+    <position class="size1" name="wrist_2_joint" joint="wrist_2_joint"/>
+    <position class="size1" name="wrist_3_joint" joint="wrist_3_joint"/>
+  </actuator>
+
+  <keyframe>
+    <!-- Начальное состояние: манипулятор сложен, захват раскрыт, шары над дном контейнеров.
+         qpos: 6 суставов руки, 8 суставов захвата, затем по 7 чисел на шар (положение и кватернион). -->
+    <key name="initial"
+         qpos="
+         2.5759 -2.1611 1.6805 -1.0902 -1.5708 -0.5657
+         0.00293 0.00016 0.00319 -0.00343 0.00293 0.00016 0.0032 -0.00344
+         0.4185 0.0608 0.045 1 0 0 0
+         0.4935 0.0608 0.045 1 0 0 0
+         0.4185 0.1804 0.045 1 0 0 0
+         0.4935 0.1804 0.045 1 0 0 0
+         0.4185 0.3 0.045 1 0 0 0
+         0.4935 0.3 0.045 1 0 0 0
+         0.4185 0.4196 0.045 1 0 0 0
+         0.4935 0.4196 0.045 1 0 0 0
+         0.4185 0.5392 0.045 1 0 0 0
+         0.4935 0.5392 0.045 1 0 0 0
+         0.4185 -0.0608 0.045 1 0 0 0
+         0.4935 -0.0608 0.045 1 0 0 0
+         0.4185 -0.1804 0.045 1 0 0 0
+         0.4935 -0.1804 0.045 1 0 0 0
+         0.4185 -0.3 0.045 1 0 0 0
+         0.4935 -0.3 0.045 1 0 0 0
+         0.4185 -0.4196 0.045 1 0 0 0
+         0.4935 -0.4196 0.045 1 0 0 0
+         0.4185 -0.5392 0.045 1 0 0 0
+         0.4935 -0.5392 0.045 1 0 0 0
+         "
+         ctrl="2.5759 -2.1611 1.6805 -1.0902 -1.5708 -0.5657 0"/>
+  </keyframe>
+</mujoco>

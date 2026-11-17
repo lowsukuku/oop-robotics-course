@@ -1,0 +1,153 @@
+<?xml version="1.0"?>
+<!--
+  Описание манипулятора UR5e с захватом Robotiq 2F-85 для задачи сортировки шаров.
+
+  Файл решает две задачи:
+  1. Кинематика. Цепочка base_link → tcp повторяет модель MuJoCo
+     (simulation/ball_sorting/scene.xml и models/mujoco_menagerie/robotiq_2f85/2f85.xml):
+     положение каждого сустава взято из атрибутов pos/quat соответствующего тела. По этой
+     цепочке решаются прямая и обратная задачи кинематики, поэтому расхождение с моделью
+     MuJoCo дало бы систематическую ошибку позиционирования.
+  2. Система управления. Блок <ros2_control> подключает симулятор MuJoCo как аппаратный
+     интерфейс и перечисляет суставы с их командными интерфейсами и интерфейсами состояния.
+
+  Геометрии звеньев в файле нет: робота показывает окно MuJoCo.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="ur5e_2f85">
+  <xacro:arg name="headless" default="false"/>
+  <xacro:arg name="sim_speed_factor" default="1.0"/>
+
+  <xacro:property name="half_pi" value="${pi / 2}"/>
+
+  <!-- base_link — система основания манипулятора: совпадает с мировой системой MuJoCo. -->
+  <link name="base_link"/>
+
+  <!-- Тело base модели MuJoCo повёрнуто на 180° вокруг z, как base_link_inertia в описании UR. -->
+  <link name="base_link_inertia"/>
+  <joint name="base_link-base_link_inertia" type="fixed">
+    <parent link="base_link"/>
+    <child link="base_link_inertia"/>
+    <origin xyz="0 0 0" rpy="0 0 ${pi}"/>
+  </joint>
+
+  <link name="shoulder_link"/>
+  <joint name="shoulder_pan_joint" type="revolute">
+    <parent link="base_link_inertia"/>
+    <child link="shoulder_link"/>
+    <origin xyz="0 0 0.163" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-6.28319" upper="6.28319" effort="150" velocity="3.14"/>
+  </joint>
+
+  <link name="upper_arm_link"/>
+  <joint name="shoulder_lift_joint" type="revolute">
+    <parent link="shoulder_link"/>
+    <child link="upper_arm_link"/>
+    <origin xyz="0 0.138 0" rpy="0 ${half_pi} 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-6.28319" upper="6.28319" effort="150" velocity="3.14"/>
+  </joint>
+
+  <link name="forearm_link"/>
+  <joint name="elbow_joint" type="revolute">
+    <parent link="upper_arm_link"/>
+    <child link="forearm_link"/>
+    <origin xyz="0 -0.131 0.425" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-3.1415" upper="3.1415" effort="150" velocity="3.14"/>
+  </joint>
+
+  <link name="wrist_1_link"/>
+  <joint name="wrist_1_joint" type="revolute">
+    <parent link="forearm_link"/>
+    <child link="wrist_1_link"/>
+    <origin xyz="0 0 0.392" rpy="0 ${half_pi} 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-6.28319" upper="6.28319" effort="28" velocity="3.14"/>
+  </joint>
+
+  <link name="wrist_2_link"/>
+  <joint name="wrist_2_joint" type="revolute">
+    <parent link="wrist_1_link"/>
+    <child link="wrist_2_link"/>
+    <origin xyz="0 0.127 0" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-6.28319" upper="6.28319" effort="28" velocity="3.14"/>
+  </joint>
+
+  <link name="wrist_3_link"/>
+  <joint name="wrist_3_joint" type="revolute">
+    <parent link="wrist_2_link"/>
+    <child link="wrist_3_link"/>
+    <origin xyz="0 0 0.1" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-6.28319" upper="6.28319" effort="28" velocity="3.14"/>
+  </joint>
+
+  <!-- Фланец: плоскость крепления инструмента, ось z направлена от запястья. -->
+  <link name="flange"/>
+  <joint name="wrist_3-flange" type="fixed">
+    <parent link="wrist_3_link"/>
+    <child link="flange"/>
+    <origin xyz="0 0.1 0" rpy="${-half_pi} 0 0"/>
+  </joint>
+
+  <!-- Основание захвата 2F-85 (тела base_mount и base модели MuJoCo). -->
+  <link name="gripper_base"/>
+  <joint name="flange-gripper_base" type="fixed">
+    <parent link="flange"/>
+    <child link="gripper_base"/>
+    <origin xyz="0 0 0.0108" rpy="0 0 ${-half_pi}"/>
+  </joint>
+
+  <!--
+    tcp — точка между подушечками пальцев на оси захвата, на высоте центров подушечек
+    при раскрытии 68 мм (диаметр шара). Ось z направлена от захвата, пальцы сжимаются вдоль оси y.
+    Позы захвата задаются для этой точки.
+  -->
+  <link name="tcp"/>
+  <joint name="gripper_base-tcp" type="fixed">
+    <parent link="gripper_base"/>
+    <child link="tcp"/>
+    <origin xyz="0 0 0.1365" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Привод захвата: ведущее звено правого пальца; остальные звенья захвата есть только в модели MuJoCo. -->
+  <link name="gripper_right_driver"/>
+  <joint name="gripper_right_driver_joint" type="revolute">
+    <parent link="gripper_base"/>
+    <child link="gripper_right_driver"/>
+    <origin xyz="0 0.0306011 0.054904" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="0" upper="0.8" effort="5" velocity="2"/>
+  </joint>
+
+  <ros2_control name="MujocoSystem" type="system">
+    <hardware>
+      <plugin>mujoco_ros2_control/MujocoSystemInterface</plugin>
+      <param name="mujoco_model">$(find ball_sorting_description)/simulation/ball_sorting/scene.xml</param>
+      <!-- Начальное состояние сцены: манипулятор сложен, захват раскрыт, шары над дном контейнеров. -->
+      <param name="initial_keyframe">initial</param>
+      <param name="sim_speed_factor">$(arg sim_speed_factor)</param>
+      <param name="headless">$(arg headless)</param>
+    </hardware>
+
+    <xacro:macro name="position_joint" params="name">
+      <joint name="${name}">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+      </joint>
+    </xacro:macro>
+
+    <xacro:position_joint name="shoulder_pan_joint"/>
+    <xacro:position_joint name="shoulder_lift_joint"/>
+    <xacro:position_joint name="elbow_joint"/>
+    <xacro:position_joint name="wrist_1_joint"/>
+    <xacro:position_joint name="wrist_2_joint"/>
+    <xacro:position_joint name="wrist_3_joint"/>
+    <!-- Для привода захвата публикуется и усилие (effort). -->
+    <xacro:position_joint name="gripper_right_driver_joint"/>
+  </ros2_control>
+</robot>

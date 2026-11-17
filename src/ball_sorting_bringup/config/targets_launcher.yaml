@@ -1,0 +1,14 @@
+# Параметры узла /targets_launcher (вспомогательная подача шаров).
+targets_launcher:
+  ros__parameters:
+    launch_interval: [2.0, 5.0]         # с, интервал между подачами
+    launch_point: [-0.25, 0.0, 0.9]     # м, точка подачи
+    max_launch_speed: 0.1               # м/с
+    max_balls_in_zone: 5                # подача пропускается, если в рабочей зоне столько шаров или больше
+    zone_x: [-0.60, 0.38]               # м, стенки по x: скорость подачи направлена от ближайшей стенки
+    zone_y: [-0.60, 0.60]               # м, стенки по y
+    blue_bin: [0.381, 0.531, 0.001, 0.599]    # м, внутренние границы: x_min, x_max, y_min, y_max
+    red_bin: [0.381, 0.531, -0.599, -0.001]
+    bin_height: 0.30                    # м
+    ball_states_topic: /free_joint_state_publisher/free_joint_states
+    set_state_service: /mujoco_ros2_control_node/set_free_joint_state

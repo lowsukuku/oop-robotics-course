@@ -1,0 +1,57 @@
+# Контроллеры ros2_control для задачи сортировки шаров.
+# Файл передаётся процессу ros2_control_node: в нём работают узел /controller_manager
+# и контроллеры — отдельные узлы, которые controller_manager загружает как плагины.
+
+controller_manager:
+  ros__parameters:
+    update_rate: 100  # Гц: цикл read → update → write
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    arm_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+    gripper_controller:
+      type: parallel_gripper_action_controller/GripperActionController
+
+# Публикует /joint_states: положение, скорость и усилие всех суставов из описания ros2_control.
+joint_state_broadcaster:
+  ros__parameters: {}
+
+# Исполняет суставные траектории шести суставов руки (action follow_joint_trajectory).
+arm_controller:
+  ros__parameters:
+    joints:
+      - shoulder_pan_joint
+      - shoulder_lift_joint
+      - elbow_joint
+      - wrist_1_joint
+      - wrist_2_joint
+      - wrist_3_joint
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+      - velocity
+    # Траектория считается исполненной, когда все суставы остановились в пределах допуска.
+    # Иначе через goal_time после расчётного времени goal завершается ошибкой.
+    constraints:
+      stopped_velocity_tolerance: 0.02  # рад/с
+      goal_time: 1.0                    # с
+      shoulder_pan_joint: {goal: 0.01}  # рад
+      shoulder_lift_joint: {goal: 0.01}
+      elbow_joint: {goal: 0.01}
+      wrist_1_joint: {goal: 0.01}
+      wrist_2_joint: {goal: 0.01}
+      wrist_3_joint: {goal: 0.01}
+
+# Управляет приводом захвата (action gripper_cmd): положение привода и признак упора.
+gripper_controller:
+  ros__parameters:
+    joint: gripper_right_driver_joint
+    # Упор в объект — штатный итог сжатия: goal завершается успешно с признаком stalled.
+    allow_stalling: true
+    stall_velocity_threshold: 0.005  # рад/с: привод считается остановившимся
+    stall_timeout: 0.3               # с: столько привод должен простоять, чтобы упор был признан
+    goal_tolerance: 0.01             # рад: положение достигнуто
+    # Интерфейса для задания усилия у симулятора нет (max_effort_interface не задан):
+    # усилие сжатия ограничено приводом в модели MuJoCo (forcerange в 2f85.xml).

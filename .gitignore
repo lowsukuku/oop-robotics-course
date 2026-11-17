@@ -1,0 +1,7 @@
+/build/
+/install/
+/log/
+**/__pycache__/
+*.py[cod]
+# Журнал предупреждений MuJoCo, который симулятор пишет в текущий каталог
+MUJOCO_LOG.TXT

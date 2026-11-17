@@ -1,0 +1,10 @@
+# Параметры узла /targets_detector (имитация технического зрения).
+targets_detector:
+  ros__parameters:
+    publish_rate: 10.0                  # Гц
+    rest_speed_threshold: 0.005         # м/с, шар покоится при меньшей скорости
+    work_zone_x: [-0.30, 0.30]          # м, границы рабочей зоны по x
+    work_zone_y: [-0.30, 0.30]          # м, границы рабочей зоны по y
+    table_ball_z: 0.034                 # м, высота центра шара на столе
+    table_ball_z_tolerance: 0.010       # м
+    ball_states_topic: /free_joint_state_publisher/free_joint_states

@@ -1,0 +1,14 @@
+# Плагины mujoco_ros2_control. Файл передаётся процессу ros2_control_node.
+# Плагин free_joint_state_publisher публикует истинные позы и скорости шаров:
+# по ним /targets_detector имитирует техническое зрение, а /targets_launcher выбирает шар для подачи.
+/**:
+  ros__parameters:
+    mujoco_plugins:
+      free_joint_state_publisher:
+        type: "mujoco_ros2_control_plugins/FreeJointStatePublisherPlugin"
+        frame_id: ""                              # мировая система = система основания UR5e
+        body_names: [ball_0, ball_1, ball_2, ball_3, ball_4, ball_5, ball_6,
+                     ball_7, ball_8, ball_9, ball_10, ball_11, ball_12, ball_13,
+                     ball_14, ball_15, ball_16, ball_17, ball_18, ball_19]
+        topic: "free_joint_states"
+        publish_rate: 10.0                        # Гц, как у /targets_detector
